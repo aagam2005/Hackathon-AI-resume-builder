@@ -1,34 +1,45 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import os
+
+# Set your Hugging Face token in the environment (if you want to do this in code)
+os.environ['HF_HOME'] = r'the location of hugging face here'
+os.environ['HF_HUB_TOKEN'] = 'your hugging face api here'
 
 # Load the model and tokenizer
-model_name = "EleutherAI/gpt-neo-125M"
-try:
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-except Exception as e:
-    print(f"Error loading model or tokenizer: {e}")
-    model = None
-    tokenizer = None
+model_name = "EleutherAI/gpt-neo-1.3B"
+model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=os.getenv('HF_HUB_TOKEN'))
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+# Set the pad_token to eos_token
+tokenizer.pad_token = tokenizer.eos_token
 
 def suggest_improvements(section, content):
     if not content.strip():
         return "No content provided to improve."
     
-    if model is None or tokenizer is None:
-        return "Model or Tokenizer not loaded correctly."
-
     try:
-        # Format the prompt
-        prompt = f"Improve the following {section} section of a resume:\n{content}"
+        # Use a more specific prompt
+        prompt = f"Improve and rewrite the following {section} section of a resume. Focus on concise, impactful, and professional phrasing, avoiding redundancy and repetition.\n\n{content}"
         
-        # Tokenize and generate
-        inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
-        outputs = model.generate(inputs["input_ids"], max_length=150, num_return_sequences=1)
+        # Tokenize the input and generate attention_mask manually
+        inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True, padding=True)
 
-        # Decode the output and clean it
+        # Manually create the attention mask if it isn't set
+        attention_mask = inputs["attention_mask"] if "attention_mask" in inputs else None
+
+        # Generate improved content
+        outputs = model.generate(
+            inputs["input_ids"],
+            attention_mask=attention_mask,  # Use the attention mask
+            max_length=250,
+            num_return_sequences=1,
+            no_repeat_ngram_size=2,  # Prevents repetition
+            pad_token_id=tokenizer.eos_token_id  # Set padding token explicitly
+        )
+
+        # Decode the output
         improved_content = tokenizer.decode(outputs[0], skip_special_tokens=True)
         
-        # Return the cleaned suggestions
         return improved_content.strip()
     
     except Exception as e:
