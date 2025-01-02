@@ -21,4 +21,28 @@ class ResumePDF(FPDF):
         self.multi_cell(0, 10, content)
         self.ln(5)
 
-def generate_resume(name, contact, education, experienc
+def generate_resume(name, contact, education, experience, skills, additional):
+    pdf = ResumePDF()
+    pdf.add_page()
+    
+    # Improve the content using the suggest_improvements function
+    experience = suggest_improvements("Work Experience", experience)
+    skills = suggest_improvements("Skills", skills)
+    
+    # Optionally, improve other sections as well:
+    education = suggest_improvements("Education", education)
+    additional = suggest_improvements("Additional Information", additional) if additional else additional
+    
+    # Add sections to the PDF
+    pdf.add_section("Name", name)
+    pdf.add_section("Contact Information", contact)
+    pdf.add_section("Education", education)
+    pdf.add_section("Experience", experience)
+    pdf.add_section("Skills", skills)
+    if additional:
+        pdf.add_section("Additional Information", additional)
+
+    # Save the file
+    file_name = "resume.pdf"
+    pdf.output(file_name)
+    return file_name
