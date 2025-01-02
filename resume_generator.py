@@ -1,3 +1,4 @@
+from ai_helper import suggest_improvements
 from fpdf import FPDF
 
 class ResumePDF(FPDF):
@@ -20,20 +21,4 @@ class ResumePDF(FPDF):
         self.multi_cell(0, 10, content)
         self.ln(5)
 
-def generate_resume(name, contact, education, experience, skills, additional):
-    pdf = ResumePDF()
-    pdf.add_page()
-    
-    # Add sections
-    pdf.add_section("Name", name)
-    pdf.add_section("Contact Information", contact)
-    pdf.add_section("Education", education)
-    pdf.add_section("Experience", experience)
-    pdf.add_section("Skills", skills)
-    if additional:
-        pdf.add_section("Additional Information", additional)
-
-    # Save the file
-    file_name = "resume.pdf"
-    pdf.output(file_name)
-    return file_name
+def generate_resume(name, contact, education, experienc
